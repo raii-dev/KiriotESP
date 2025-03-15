@@ -1,4 +1,4 @@
-(Thanks Kiriot22/Amia)
+-- (Thanks Kiriot22/Amia)
 
 --Settings--
 local ESP = {
