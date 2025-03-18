@@ -288,8 +288,8 @@ function ESP:Add(obj, options)
         IsEnabled = options.IsEnabled,
         Temporary = options.Temporary,
         ColorDynamic = options.ColorDynamic,
-        RenderInNil = options.RenderInNil
-	MaxDistance = options.MaxDistance
+        RenderInNil = options.RenderInNil,
+	    MaxDistance = options.MaxDistance
     }, boxBase)
 
     if self:GetBox(obj) then
