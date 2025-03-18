@@ -1,5 +1,6 @@
 -- (Thanks Kiriot22/Amia)
 
+
 --Settings--
 local ESP = {
     Enabled = false,
@@ -10,7 +11,7 @@ local ESP = {
     FaceCamera = false,
     Names = true,
     TeamColor = true,
-    Thickness = 2,
+    Thickness = 1,
     AttachShift = 1,
     TeamMates = true,
     Players = true,
@@ -199,6 +200,17 @@ function boxBase:Update()
         Torso = cf * ESP.BoxShift
     }
 
+	local distance = (cam.CFrame.p - cf.p).magnitude  -- Calculate the distance between camera and object
+
+    -- Check if the object is within Max Distance
+    if ESP.MaxDistance and distance > ESP.MaxDistance then
+        -- If the object is beyond Max Distance, hide it
+        for i,v in pairs(self.Components) do
+            v.Visible = false
+        end
+        return
+    end
+	
     if ESP.Boxes then
         local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
         local TopRight, Vis2 = WorldToViewportPoint(cam, locs.TopRight.p)
@@ -257,7 +269,7 @@ function boxBase:Update()
     else
         self.Components.Tracer.Visible = false
     end
-end
+end	
 
 function ESP:Add(obj, options)
     if not obj.Parent and not options.RenderInNil then
@@ -276,7 +288,8 @@ function ESP:Add(obj, options)
         IsEnabled = options.IsEnabled,
         Temporary = options.Temporary,
         ColorDynamic = options.ColorDynamic,
-        RenderInNil = options.RenderInNil
+        RenderInNil = options.RenderInNil,
+	MaxDistance = options.MaxDistance
     }, boxBase)
 
     if self:GetBox(obj) then
@@ -295,14 +308,14 @@ function ESP:Add(obj, options)
 		Color = box.Color,
 		Center = true,
 		Outline = true,
-        Size = 19,
+        Size = 15,
         Visible = self.Enabled and self.Names
 	})
 	box.Components["Distance"] = Draw("Text", {
 		Color = box.Color,
 		Center = true,
 		Outline = true,
-        Size = 19,
+        Size = 15,
         Visible = self.Enabled and self.Names
 	})
 	
