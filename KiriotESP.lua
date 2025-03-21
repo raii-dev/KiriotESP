@@ -6,7 +6,7 @@ local ESP = {
     Enabled = false,
     Boxes = true,
     BoxShift = CFrame.new(0,-1.5,0),
-	BoxSize = Vector3.new(4,6,0),
+    BoxSize = Vector3.new(4,6,0),
     Color = Color3.fromRGB(255, 170, 0),
     FaceCamera = false,
     Names = true,
@@ -244,7 +244,7 @@ function boxBase:Update()
             
             self.Components.Distance.Visible = true
             self.Components.Distance.Position = Vector2.new(TagPos.X, TagPos.Y + 14)
-            self.Components.Distance.Text = math.floor((cam.CFrame.p - cf.p).magnitude) .."m away"
+            self.Components.Distance.Text = "[" .. math.floor((cam.CFrame.p - cf.p).magnitude) .." studs]"
             self.Components.Distance.Color = color
         else
             self.Components.Name.Visible = false
@@ -255,19 +255,27 @@ function boxBase:Update()
         self.Components.Distance.Visible = false
     end
     
-    if ESP.Tracers then
-        local TorsoPos, Vis6 = WorldToViewportPoint(cam, locs.Torso.p)
-
-        if Vis6 then
-            self.Components.Tracer.Visible = true
-            self.Components.Tracer.From = Vector2.new(TorsoPos.X, TorsoPos.Y)
-            self.Components.Tracer.To = Vector2.new(cam.ViewportSize.X/2,cam.ViewportSize.Y/ESP.AttachShift)
-            self.Components.Tracer.Color = color
-        else
+     -- Now handle the tracers per object:
+    if self.DisableTracers then
+        -- If the object has a flag to disable tracers, hide it
+        if self.Components.Tracer then
             self.Components.Tracer.Visible = false
         end
     else
-        self.Components.Tracer.Visible = false
+        if ESP.Tracers then
+            local TorsoPos, Vis6 = WorldToViewportPoint(cam, locs.Torso.p)
+
+            if Vis6 then
+                self.Components.Tracer.Visible = true
+                self.Components.Tracer.From = Vector2.new(TorsoPos.X, TorsoPos.Y)
+                self.Components.Tracer.To = Vector2.new(cam.ViewportSize.X/2, cam.ViewportSize.Y/ESP.AttachShift)
+                self.Components.Tracer.Color = color
+            else
+                self.Components.Tracer.Visible = false
+            end
+        else
+            self.Components.Tracer.Visible = false
+        end
     end
 end	
 
