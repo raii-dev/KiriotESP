@@ -6,7 +6,7 @@ local ESP = {
     Enabled = false,
     Boxes = true,
     BoxShift = CFrame.new(0,-1.5,0),
-	BoxSize = Vector3.new(4,6,0),
+    BoxSize = Vector3.new(4,6,0),
     Color = Color3.fromRGB(255, 170, 0),
     FaceCamera = false,
     Names = true,
@@ -110,7 +110,47 @@ function ESP:AddObjectListener(parent, options)
                         IsEnabled = options.IsEnabled,
                         RenderInNil = options.RenderInNil
                     })
-                    --TODO: add a better way of passing options
+                    
+                    -- Check if a givenName is provided and handle the specific object settings
+                    if options.givenName then
+                        local givenName = options.givenName
+
+                        -- Initialize the givenName settings table if it doesn't exist yet
+                        if not ESP[givenName] then
+                            ESP[givenName] = {}
+                        end
+
+                        -- Apply the specific settings for this givenName
+                        for key, value in pairs(options) do
+                            if key ~= "givenName" then
+                                ESP[givenName][key] = value
+                            end
+                        end
+
+                        -- Now, apply the specific settings for the object based on the givenName
+                        if ESP[givenName].MaxDistance then
+                            box.MaxDistance = ESP[givenName].MaxDistance
+                        end
+                        if ESP[givenName].Tracers then
+                            box.Tracers = ESP[givenName].Tracers
+                        end
+                        if ESP[givenName].Names then
+                            box.Names = ESP[givenName].Names
+                        end
+                        if ESP[givenName].Boxes then
+                            box.Boxes = ESP[givenName].Boxes
+                        end
+                        if ESP[givenName].Color then
+                            box.Color = ESP[givenName].Color
+                        end
+                        if ESP[givenName].ColorDynamic then
+                            box.ColorDynamic = ESP[givenName].ColorDynamic
+                        end
+                        -- Add any other settings you want to handle here...
+
+                    end
+                    
+                    -- Call OnAdded if it exists in the options
                     if options.OnAdded then
                         coroutine.wrap(options.OnAdded)(box)
                     end
@@ -119,14 +159,15 @@ function ESP:AddObjectListener(parent, options)
         end
     end
 
+    -- Handle recursive option
     if options.Recursive then
         parent.DescendantAdded:Connect(NewListener)
-        for i,v in pairs(parent:GetDescendants()) do
+        for i, v in pairs(parent:GetDescendants()) do
             coroutine.wrap(NewListener)(v)
         end
     else
         parent.ChildAdded:Connect(NewListener)
-        for i,v in pairs(parent:GetChildren()) do
+        for i, v in pairs(parent:GetChildren()) do
             coroutine.wrap(NewListener)(v)
         end
     end
@@ -146,72 +187,51 @@ end
 
 function boxBase:Update()
     if not self.PrimaryPart then
-        --warn("not supposed to print", self.Object)
         return self:Remove()
     end
 
-    local color
-    if ESP.Highlighted == self.Object then
-       color = ESP.HighlightColor
-    else
-        color = self.Color or self.ColorDynamic and self:ColorDynamic() or ESP:GetColor(self.Object) or ESP.Color
-    end
+    -- Check if the givenName property exists and retrieve dynamic settings
+    local givenName = self.givenName
 
-    local allow = true
-    if ESP.Overrides.UpdateAllow and not ESP.Overrides.UpdateAllow(self) then
-        allow = false
-    end
-    if self.Player and not ESP.TeamMates and ESP:IsTeamMate(self.Player) then
-        allow = false
-    end
-    if self.Player and not ESP.Players then
-        allow = false
-    end
-    if self.IsEnabled and (type(self.IsEnabled) == "string" and not ESP[self.IsEnabled] or type(self.IsEnabled) == "function" and not self:IsEnabled()) then
-        allow = false
-    end
-    if not workspace:IsAncestorOf(self.PrimaryPart) and not self.RenderInNil then
-        allow = false
-    end
+    -- Get the global settings
+    local globalMaxDistance = ESP.MaxDistance
+    local globalTracers = ESP.Tracers
+    local globalNames = ESP.Names
+    local globalBoxes = ESP.Boxes
+    local globalColor = ESP.Color
 
-    if not allow then
-        for i,v in pairs(self.Components) do
+    -- Get object-specific settings (if any)
+    local objectSettings = ESP[givenName] or {}
+
+    -- Check if object-specific settings override global settings
+    local maxDistance = objectSettings.MaxDistance or globalMaxDistance
+    local tracersEnabled = objectSettings.Tracers or globalTracers
+    local namesEnabled = objectSettings.Names or globalNames
+    local boxesEnabled = objectSettings.Boxes or globalBoxes
+    local color = objectSettings.Color or globalColor
+
+    -- Handling the object's visibility and distance
+    local cf = self.PrimaryPart.CFrame
+    local distance = (cam.CFrame.p - cf.p).magnitude
+
+    -- Max Distance check (hide if beyond max distance)
+    if maxDistance and distance > maxDistance then
+        for i, v in pairs(self.Components) do
             v.Visible = false
         end
         return
     end
 
+    -- Default color logic
     if ESP.Highlighted == self.Object then
         color = ESP.HighlightColor
+    else
+        color = self.Color or self.ColorDynamic and self:ColorDynamic() or color
     end
 
-    --calculations--
-    local cf = self.PrimaryPart.CFrame
-    if ESP.FaceCamera then
-        cf = CFrame.new(cf.p, cam.CFrame.p)
-    end
-    local size = self.Size
-    local locs = {
-        TopLeft = cf * ESP.BoxShift * CFrame.new(size.X/2,size.Y/2,0),
-        TopRight = cf * ESP.BoxShift * CFrame.new(-size.X/2,size.Y/2,0),
-        BottomLeft = cf * ESP.BoxShift * CFrame.new(size.X/2,-size.Y/2,0),
-        BottomRight = cf * ESP.BoxShift * CFrame.new(-size.X/2,-size.Y/2,0),
-        TagPos = cf * ESP.BoxShift * CFrame.new(0,size.Y/2,0),
-        Torso = cf * ESP.BoxShift
-    }
-
-	local distance = (cam.CFrame.p - cf.p).magnitude  -- Calculate the distance between camera and object
-
-    -- Check if the object is within Max Distance
-    if ESP.MaxDistance and distance > ESP.MaxDistance then
-        -- If the object is beyond Max Distance, hide it
-        for i,v in pairs(self.Components) do
-            v.Visible = false
-        end
-        return
-    end
-	
-    if ESP.Boxes then
+    -- Update visual components (boxes, names, etc.)
+    if boxesEnabled then
+        -- Box rendering logic (same as your original code)
         local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
         local TopRight, Vis2 = WorldToViewportPoint(cam, locs.TopRight.p)
         local BottomLeft, Vis3 = WorldToViewportPoint(cam, locs.BottomLeft.p)
@@ -233,18 +253,19 @@ function boxBase:Update()
         self.Components.Quad.Visible = false
     end
 
-    if ESP.Names then
+    -- Handle Name and Distance rendering
+    if namesEnabled then
         local TagPos, Vis5 = WorldToViewportPoint(cam, locs.TagPos.p)
-        
+
         if Vis5 then
             self.Components.Name.Visible = true
             self.Components.Name.Position = Vector2.new(TagPos.X, TagPos.Y)
             self.Components.Name.Text = self.Name
             self.Components.Name.Color = color
-            
+
             self.Components.Distance.Visible = true
             self.Components.Distance.Position = Vector2.new(TagPos.X, TagPos.Y + 14)
-            self.Components.Distance.Text = math.floor((cam.CFrame.p - cf.p).magnitude) .."m away"
+            self.Components.Distance.Text = "[" .. math.floor(distance) .. "m]"
             self.Components.Distance.Color = color
         else
             self.Components.Name.Visible = false
@@ -254,14 +275,15 @@ function boxBase:Update()
         self.Components.Name.Visible = false
         self.Components.Distance.Visible = false
     end
-    
-    if ESP.Tracers then
+
+    -- Tracer visibility logic
+    if tracersEnabled then
         local TorsoPos, Vis6 = WorldToViewportPoint(cam, locs.Torso.p)
 
         if Vis6 then
             self.Components.Tracer.Visible = true
             self.Components.Tracer.From = Vector2.new(TorsoPos.X, TorsoPos.Y)
-            self.Components.Tracer.To = Vector2.new(cam.ViewportSize.X/2,cam.ViewportSize.Y/ESP.AttachShift)
+            self.Components.Tracer.To = Vector2.new(cam.ViewportSize.X / 2, cam.ViewportSize.Y / ESP.AttachShift)
             self.Components.Tracer.Color = color
         else
             self.Components.Tracer.Visible = false
@@ -269,7 +291,7 @@ function boxBase:Update()
     else
         self.Components.Tracer.Visible = false
     end
-end	
+end
 
 function ESP:Add(obj, options)
     if not obj.Parent and not options.RenderInNil then
@@ -289,7 +311,7 @@ function ESP:Add(obj, options)
         Temporary = options.Temporary,
         ColorDynamic = options.ColorDynamic,
         RenderInNil = options.RenderInNil,
-	    MaxDistance = options.MaxDistance
+	MaxDistance = options.MaxDistance
     }, boxBase)
 
     if self:GetBox(obj) then
