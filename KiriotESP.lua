@@ -102,45 +102,17 @@ function ESP:AddObjectListener(parent, options)
         if type(options.Type) == "string" and c:IsA(options.Type) or options.Type == nil then
             if type(options.Name) == "string" and c.Name == options.Name or options.Name == nil then
                 if not options.Validator or options.Validator(c) then
-                    -- Declare primaryPart before using it
-                    local primaryPart
-                    if type(options.PrimaryPart) == "string" then
-                        -- Wait for the primary part to exist with a timeout
-                        primaryPart = c:WaitForChild(options.PrimaryPart, 5)  -- Waits up to 5 seconds
-                    elseif type(options.PrimaryPart) == "function" then
-                        primaryPart = options.PrimaryPart(c)
-                    end
-
-                    -- If primaryPart is still nil after waiting, retry waiting for it
-                    if not primaryPart then
-                        -- Retry logic: Wait and check multiple times before giving up
-                        for i = 1, 5 do  -- Retry for 5 seconds max
-                            print("Waiting for PrimaryPart to appear...")
-                            primaryPart = c:FindFirstChild(options.PrimaryPart) or c:WaitForChild(options.PrimaryPart, 1) -- Retry with 1 second intervals
-                            if primaryPart then
-                                break
-                            end
-                            task.wait(1)  -- Wait for 1 second before retrying
-                        end
-                    end
-                    
-                    -- If we found a valid primaryPart, proceed to add the box
-                    if primaryPart then
-                        local box = ESP:Add(c, {
-                            PrimaryPart = primaryPart,
-                            Color = type(options.Color) == "function" and options.Color(c) or options.Color,
-                            ColorDynamic = options.ColorDynamic,
-                            Name = type(options.CustomName) == "function" and options.CustomName(c) or options.CustomName,
-                            IsEnabled = options.IsEnabled,
-                            RenderInNil = options.RenderInNil
-                        })
-                        
-                        -- Call OnAdded callback if provided
-                        if options.OnAdded then
-                            coroutine.wrap(options.OnAdded)(box)
-                        end
-                    else
-                        print("No valid primary part found for", c.Name)
+                    local box = ESP:Add(c, {
+                        PrimaryPart = type(options.PrimaryPart) == "string" and c:WaitForChild(options.PrimaryPart) or type(options.PrimaryPart) == "function" and options.PrimaryPart(c),
+                        Color = type(options.Color) == "function" and options.Color(c) or options.Color,
+                        ColorDynamic = options.ColorDynamic,
+                        Name = type(options.CustomName) == "function" and options.CustomName(c) or options.CustomName,
+                        IsEnabled = options.IsEnabled,
+                        RenderInNil = options.RenderInNil
+                    })
+                    --TODO: add a better way of passing options
+                    if options.OnAdded then
+                        coroutine.wrap(options.OnAdded)(box)
                     end
                 end
             end
@@ -149,17 +121,13 @@ function ESP:AddObjectListener(parent, options)
 
     if options.Recursive then
         parent.DescendantAdded:Connect(NewListener)
-        for i, v in pairs(parent:GetDescendants()) do
-            coroutine.wrap(NewListener)(v)
+        for i,v in pairs(parent:GetDescendants()) do
+            NewListener(v)
         end
     else
-        parent.ChildAdded:Connect(function(c)
-            NewListener(c)
-        end)
-        
-        -- Also process the current children
-        for i, v in pairs(parent:GetChildren()) do
-            coroutine.wrap(NewListener)(v)
+        parent.ChildAdded:Connect(NewListener)
+        for i,v in pairs(parent:GetChildren()) do
+             NewListener(v)
         end
     end
 end
