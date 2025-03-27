@@ -102,32 +102,50 @@ function ESP:AddObjectListener(parent, options)
         if type(options.Type) == "string" and c:IsA(options.Type) or options.Type == nil then
             if type(options.Name) == "string" and c.Name == options.Name or options.Name == nil then
                 if not options.Validator or options.Validator(c) then
-                    local box = ESP:Add(c, {
-                        PrimaryPart = type(options.PrimaryPart) == "string" and c:WaitForChild(options.PrimaryPart) or type(options.PrimaryPart) == "function" and options.PrimaryPart(c),
-                        Color = type(options.Color) == "function" and options.Color(c) or options.Color,
-                        ColorDynamic = options.ColorDynamic,
-                        Name = type(options.CustomName) == "function" and options.CustomName(c) or options.CustomName,
-                        IsEnabled = options.IsEnabled,
-                        RenderInNil = options.RenderInNil
-                    })
-                    --TODO: add a better way of passing options
-                    if options.OnAdded then
-                        coroutine.wrap(options.OnAdded)(box)
+                    -- Attempt to get PrimaryPart in order: "HumanoidRootPart", "Head", or any "BasePart"
+                    local primaryPart = c:WaitForChild("HumanoidRootPart", 5) 
+                        or c:WaitForChild("Head", 5) 
+                        or c:FindFirstChildWhichIsA("BasePart")
+
+                    if primaryPart then
+                        -- Now that we have the primaryPart, we can add the ESP box
+                        local box = ESP:Add(c, {
+                            PrimaryPart = primaryPart,
+                            Color = type(options.Color) == "function" and options.Color(c) or options.Color,
+                            ColorDynamic = options.ColorDynamic,
+                            Name = type(options.CustomName) == "function" and options.CustomName(c) or options.CustomName,
+                            IsEnabled = options.IsEnabled,
+                            RenderInNil = options.RenderInNil
+                        })
+
+                        -- If OnAdded callback is provided, call it
+                        if options.OnAdded then
+                            coroutine.wrap(options.OnAdded)(box)
+                        end
+                    else
+                        print("No valid primary part found for:", c.Name)
                     end
                 end
             end
         end
     end
 
+    -- Listening for new children added
     if options.Recursive then
-        parent.DescendantAdded:Connect(NewListener)
-        for i,v in pairs(parent:GetDescendants()) do
-            NewListener(v)
+        parent.DescendantAdded:Connect(function(c)
+            NewListener(c)  -- We don't wrap it in a coroutine to block on the main thread
+        end)
+        for i, v in pairs(parent:GetDescendants()) do
+            NewListener(v)  -- No coroutine wrap here
         end
     else
-        parent.ChildAdded:Connect(NewListener)
-        for i,v in pairs(parent:GetChildren()) do
-             NewListener(v)
+        parent.ChildAdded:Connect(function(c)
+            NewListener(c)  -- We don't wrap it in a coroutine to block on the main thread
+        end)
+        
+        -- Also process the current children
+        for i, v in pairs(parent:GetChildren()) do
+            NewListener(v)  -- No coroutine wrap here
         end
     end
 end
