@@ -133,22 +133,33 @@ function ESP:AddObjectListener(parent, options)
     -- Listening for new children added
     if options.Recursive then
         parent.DescendantAdded:Connect(function(c)
-            NewListener(c)  -- We don't wrap it in a coroutine to block on the main thread
+            coroutine.wrap(function()  -- Wrap inside a coroutine
+                NewListener(c)
+            end)()
         end)
+
+        -- Also process all current descendants in a coroutine
         for i, v in pairs(parent:GetDescendants()) do
-            NewListener(v)  -- No coroutine wrap here
+            coroutine.wrap(function()
+                NewListener(v)
+            end)()
         end
     else
         parent.ChildAdded:Connect(function(c)
-            NewListener(c)  -- We don't wrap it in a coroutine to block on the main thread
+            coroutine.wrap(function()  -- Wrap inside a coroutine
+                NewListener(c)
+            end)()
         end)
         
-        -- Also process the current children
+        -- Also process all current children in a coroutine
         for i, v in pairs(parent:GetChildren()) do
-            NewListener(v)  -- No coroutine wrap here
+            coroutine.wrap(function()
+                NewListener(v)
+            end)()
         end
     end
 end
+
 
 
 local boxBase = {}
