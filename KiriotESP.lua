@@ -206,7 +206,7 @@ function boxBase:Update()
     if ESP.MaxDistance and distance > ESP.MaxDistance then
         -- If the object is beyond Max Distance, hide it
         for i,v in pairs(self.Components) do
-            v.Visible = false
+            -- v.Visible = false -- (nothing yet because i need to fix for each individual component)
         end
         return
     end
