@@ -105,12 +105,26 @@ function ESP:AddObjectListener(parent, options)
                     -- Declare primaryPart before using it
                     local primaryPart
                     if type(options.PrimaryPart) == "string" then
+                        -- Wait for the primary part to exist with a timeout
                         primaryPart = c:WaitForChild(options.PrimaryPart, 5)  -- Waits up to 5 seconds
                     elseif type(options.PrimaryPart) == "function" then
                         primaryPart = options.PrimaryPart(c)
                     end
 
-                    -- If primaryPart is valid, continue to add the box
+                    -- If primaryPart is still nil after waiting, retry waiting for it
+                    if not primaryPart then
+                        -- Retry logic: Wait and check multiple times before giving up
+                        for i = 1, 5 do  -- Retry for 5 seconds max
+                            print("Waiting for PrimaryPart to appear...")
+                            primaryPart = c:FindFirstChild(options.PrimaryPart) or c:WaitForChild(options.PrimaryPart, 1) -- Retry with 1 second intervals
+                            if primaryPart then
+                                break
+                            end
+                            task.wait(1)  -- Wait for 1 second before retrying
+                        end
+                    end
+                    
+                    -- If we found a valid primaryPart, proceed to add the box
                     if primaryPart then
                         local box = ESP:Add(c, {
                             PrimaryPart = primaryPart,
@@ -149,6 +163,7 @@ function ESP:AddObjectListener(parent, options)
         end
     end
 end
+
 
 local boxBase = {}
 boxBase.__index = boxBase
