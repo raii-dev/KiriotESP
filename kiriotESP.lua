@@ -105,7 +105,8 @@ function ESP:AddObjectListener(parent, options)
                     -- Attempt to get PrimaryPart in order: "HumanoidRootPart", "Head", or any "BasePart"
                     local primaryPart = c:WaitForChild("HumanoidRootPart", 5) 
                         or c:WaitForChild("Head", 5) 
-                        or c:FindFirstChildWhichIsA("BasePart")
+                        or c:FindFirstChildWhichIsA("BasePart") 
+			or c:IsA("Model") and c
 
                     if primaryPart then
                         -- Now that we have the primaryPart, we can add the ESP box
