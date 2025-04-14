@@ -212,7 +212,9 @@ function boxBase:Update()
 
 	if not allow then
 		for i,v in pairs(self.Components) do
-			v.Visible = false
+			if not v:IsA("Highlight") then
+				v.Visible = false
+			end
 		end
 		return
 	end
@@ -274,13 +276,11 @@ function boxBase:Update()
 	if self.Components.Highlight then
 		local highlight = self.Components.Highlight
 
-		if ESP.Highlights then
-			highlight.FillColor = color
-			highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-			highlight.Enabled = self.ShowHighlight ~= false
-		else
-			highlight.Enabled = false
-		end
+		local shouldShow = ESP.Highlights and (self.ShowHighlight ~= false)
+
+		highlight.FillColor = color
+		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+		highlight.Enabled = shouldShow
 	end
 
 	if ESP.Names then
