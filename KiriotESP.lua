@@ -273,15 +273,15 @@ function boxBase:Update()
 		self.Components.Quad.Visible = false
 	end
 	
-	if self.Components.Highlight then
-		local highlight = self.Components.Highlight
+    if self.Components.Highlight then
+        local highlight = self.Components.Highlight
 
-		local shouldShow = ESP.Highlights and (self.ShowHighlight ~= false)
+        local shouldShow = ESP.Highlights and (self.ShowHighlight ~= false)
 
-		highlight.FillColor = color
-		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-		highlight.Enabled = shouldShow
-	end
+        highlight.FillColor = color
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+        highlight.Enabled = shouldShow
+    end
 
 	if ESP.Names then
 		local TagPos, Vis5 = WorldToViewportPoint(cam, locs.TagPos.p)
@@ -388,9 +388,9 @@ function ESP:Add(obj, options)
 	
 	if options.Highlight then
 		local highlight = Instance.new("Highlight")
-		highlight.Name = "ESP_Highlight"
+		highlight.Name = "raii_highlight"
 		highlight.Adornee = obj
-		highlight.Enabled = ESP.Highlights -- global toggle
+		highlight.Enabled = true 
 		highlight.FillColor = box.Color or Color3.fromRGB(255, 0, 0)
 		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
 		highlight.FillTransparency = 0.5
@@ -434,6 +434,7 @@ local function CharAdded(char)
 					Name = p.Name,
 					Player = p,
 					ShowHighlight = true,
+                    Highlight = true,
 					PrimaryPart = c
 				})
 			end
@@ -443,6 +444,7 @@ local function CharAdded(char)
 			Name = p.Name,
 			Player = p,
 			ShowHighlight = true,
+            Highlight = true,
 			PrimaryPart = char.HumanoidRootPart
 		})
 	end
