@@ -15,6 +15,7 @@ local ESP = {
 	AttachShift = 1,
 	TeamMates = true,
 	Players = true,
+	Highlights = true, 
 
 	Objects = setmetatable({}, {__mode="kv"}),
 	Overrides = {}
@@ -429,7 +430,7 @@ local function CharAdded(char)
 				ESP:Add(char, {
 					Name = p.Name,
 					Player = p,
-					ShowHighlights = true,
+					ShowHighlight = true,
 					PrimaryPart = c
 				})
 			end
@@ -438,7 +439,7 @@ local function CharAdded(char)
 		ESP:Add(char, {
 			Name = p.Name,
 			Player = p,
-			ShowHighlights = true,
+			ShowHighlight = true,
 			PrimaryPart = char.HumanoidRootPart
 		})
 	end
