@@ -212,7 +212,7 @@ function boxBase:Update()
 
 	if not allow then
 		for i,v in pairs(self.Components) do
-			if not v:IsA("Highlight") then
+			if v.Name ~= "raii_highlight" then
 				v.Visible = false
 			end
 		end
