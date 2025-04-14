@@ -274,7 +274,9 @@ function boxBase:Update()
 		local highlight = self.Components.Highlight
 		highlight.FillColor = color
 		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-		highlight.Enabled = self.ShowHighlight == true
+
+		-- Global + per-object control
+		highlight.Enabled = ESP.Highlights and (self.ShowHighlight ~= false)
 	end
 
 	if ESP.Names then
