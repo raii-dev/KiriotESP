@@ -169,8 +169,12 @@ boxBase.__index = boxBase
 function boxBase:Remove()
     ESP.Objects[self.Object] = nil
     for i,v in pairs(self.Components) do
-        v.Visible = false
-        v:Remove()
+        if typeof(v) == "Instance" and v:IsA("Highlight") then
+            v:Destroy()
+        elseif v.Remove then
+            v.Visible = false
+            v:Remove()
+        end
         self.Components[i] = nil
     end
 end
@@ -241,6 +245,8 @@ function boxBase:Update()
         end
         return
     end
+
+
 	
     if ESP.Boxes then
         local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
@@ -264,6 +270,22 @@ function boxBase:Update()
         self.Components.Quad.Visible = false
     end
 
+	if ESP.Highlights then
+		if self.Components.Highlight then
+			local highlight = self.Components.Highlight
+			highlight.FillColor = color
+			highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+			highlight.Enabled = true
+		end
+	else
+		if self.Components.Highlight then
+			local highlight = self.Components.Highlight
+			highlight.FillColor = color
+			highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+			highlight.Enabled = false
+		end
+	end
+	
     if ESP.Names then
         local TagPos, Vis5 = WorldToViewportPoint(cam, locs.TagPos.p)
         
@@ -335,6 +357,20 @@ function ESP:Add(obj, options)
         self:GetBox(obj):Remove()
     end
 
+	if obj:IsA("Model") and obj:FindFirstChildWhichIsA("BasePart") then
+	    local highlight = Instance.new("Highlight")
+	    highlight.Name = "ESPHighlight"
+	    highlight.FillColor = box.Color or Color3.new(1, 0, 0)
+	    highlight.OutlineColor = Color3.new(1, 1, 1)
+	    highlight.FillTransparency = 0.25
+	    highlight.OutlineTransparency = 0
+	    highlight.Adornee = obj
+	    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	    highlight.Parent = obj
+	
+	    box.Components["Highlight"] = highlight
+	end
+		
     box.Components["Quad"] = Draw("Quad", {
         Thickness = self.Thickness,
         Color = color,
