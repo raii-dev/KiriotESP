@@ -270,15 +270,17 @@ function boxBase:Update()
 	else
 		self.Components.Quad.Visible = false
 	end
-
-
+	
 	if self.Components.Highlight then
 		local highlight = self.Components.Highlight
-		highlight.FillColor = color
-		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
 
-		-- Global + per-object control
-		highlight.Enabled = ESP.Highlights and (self.ShowHighlight ~= false)
+		if ESP.Highlights then
+			highlight.FillColor = color
+			highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+			highlight.Enabled = self.ShowHighlight ~= false
+		else
+			highlight.Enabled = false
+		end
 	end
 
 	if ESP.Names then
@@ -346,7 +348,7 @@ function ESP:Add(obj, options)
 		ColorDynamic = options.ColorDynamic,
 		RenderInNil = options.RenderInNil,
 		MaxDistance = options.MaxDistance,
-		ShowHighlight = options.ShowHighlight,
+		ShowHighlight = options.ShowHighlight ~= false,
 	}, boxBase)
 
 	if self:GetBox(obj) then
@@ -382,20 +384,21 @@ function ESP:Add(obj, options)
 		Transparency = 1,
 		Visible = self.Enabled and self.Tracers
 	})
-
-    local highlight = Instance.new("Highlight")
-    highlight.Name = "raii_highlight"
-    highlight.Adornee = obj
-    highlight.Enabled = ESP.Highlights -- global toggle
-    highlight.FillColor = box.Color or Color3.fromRGB(255, 0, 0)
-    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-    highlight.FillTransparency = 0.5
-    highlight.OutlineTransparency = 0
-    highlight.Parent = obj
-
-    box.Components.Highlight = highlight
-
 	self.Objects[obj] = box
+	
+	if options.Highlight then
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "ESP_Highlight"
+		highlight.Adornee = obj
+		highlight.Enabled = ESP.Highlights -- global toggle
+		highlight.FillColor = box.Color or Color3.fromRGB(255, 0, 0)
+		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+		highlight.FillTransparency = 0.5
+		highlight.OutlineTransparency = 0
+		highlight.Parent = obj
+
+		box.Components.Highlight = highlight
+	end
 
 	obj.AncestryChanged:Connect(function(_, parent)
 		if parent == nil and ESP.AutoRemove ~= false then
