@@ -429,6 +429,7 @@ local function CharAdded(char)
 				ESP:Add(char, {
 					Name = p.Name,
 					Player = p,
+					ShowHighlights = true,
 					PrimaryPart = c
 				})
 			end
@@ -437,6 +438,7 @@ local function CharAdded(char)
 		ESP:Add(char, {
 			Name = p.Name,
 			Player = p,
+			ShowHighlights = true,
 			PrimaryPart = char.HumanoidRootPart
 		})
 	end
