@@ -16,6 +16,7 @@ local ESP = {
 	TeamMates = true,
 	Players = true,
 	Highlights = true, 
+	Skeletons = true,
 
 	Objects = setmetatable({}, {__mode="kv"}),
 	Overrides = {}
@@ -273,15 +274,54 @@ function boxBase:Update()
 		self.Components.Quad.Visible = false
 	end
 	
-    if self.Components.Highlight then
-        local highlight = self.Components.Highlight
+	if ESP.Skeletons and self.Components.Skeleton then
+		local model = self.Object
+		local bones = {
+			{"Head", "UpperTorso"},
+			{"UpperTorso", "LowerTorso"},
+			{"UpperTorso", "LeftUpperArm"},
+			{"LeftUpperArm", "LeftLowerArm"},
+			{"LeftLowerArm", "LeftHand"},
+			{"UpperTorso", "RightUpperArm"},
+			{"RightUpperArm", "RightLowerArm"},
+			{"RightLowerArm", "RightHand"},
+			{"LowerTorso", "LeftUpperLeg"},
+			{"LeftUpperLeg", "LeftLowerLeg"},
+			{"LeftLowerLeg", "LeftFoot"},
+			{"LowerTorso", "RightUpperLeg"},
+			{"RightUpperLeg", "RightLowerLeg"},
+			{"RightLowerLeg", "RightFoot"},
+		}
 
-        local shouldShow = ESP.Highlights and (self.ShowHighlight ~= false)
+		for i, pair in ipairs(bones) do
+			local a = model:FindFirstChild(pair[1])
+			local b = model:FindFirstChild(pair[2])
+			local line = self.Components.Skeleton[i]
 
-        highlight.FillColor = color
-        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-        highlight.Enabled = shouldShow
-    end
+			if a and b and line then
+				local aPos, aOnScreen = WorldToViewportPoint(cam, a.Position)
+				local bPos, bOnScreen = WorldToViewportPoint(cam, b.Position)
+				line.Visible = aOnScreen or bOnScreen
+				if line.Visible then
+					line.From = Vector2.new(aPos.X, aPos.Y)
+					line.To = Vector2.new(bPos.X, bPos.Y)
+					line.Color = color
+				end
+			elseif line then
+				line.Visible = false
+			end
+		end
+	end
+
+	if self.Components.Highlight then
+		local highlight = self.Components.Highlight
+
+		local shouldShow = ESP.Highlights and (self.ShowHighlight ~= false)
+
+		highlight.FillColor = color
+		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+		highlight.Enabled = shouldShow
+	end
 
 	if ESP.Names then
 		local TagPos, Vis5 = WorldToViewportPoint(cam, locs.TagPos.p)
@@ -384,8 +424,19 @@ function ESP:Add(obj, options)
 		Transparency = 1,
 		Visible = self.Enabled and self.Tracers
 	})
-	self.Objects[obj] = box
 	
+	box.Components["Skeleton"] = {}
+
+	for i = 1, 13 do
+		box.Components["Skeleton"][i] = Draw("Line", {
+			Color = box.Color,
+			Thickness = ESP.Thickness,
+			Visible = false
+		})
+	end
+	
+	self.Objects[obj] = box
+
 	if options.Highlight then
 		local highlight = Instance.new("Highlight")
 		highlight.Name = "raii_highlight"
@@ -434,7 +485,7 @@ local function CharAdded(char)
 					Name = p.Name,
 					Player = p,
 					ShowHighlight = true,
-                    Highlight = true,
+					Highlight = true,
 					PrimaryPart = c
 				})
 			end
@@ -444,7 +495,7 @@ local function CharAdded(char)
 			Name = p.Name,
 			Player = p,
 			ShowHighlight = true,
-            Highlight = true,
+			Highlight = true,
 			PrimaryPart = char.HumanoidRootPart
 		})
 	end
