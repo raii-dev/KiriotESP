@@ -5,6 +5,7 @@
 local ESP = {
 	Enabled = false,
 	Boxes = true,
+	HeadCircle = true,
 	BoxShift = CFrame.new(0,-1.5,0),
 	BoxSize = Vector3.new(4,6,0),
 	Color = Color3.fromRGB(255, 170, 0),
@@ -305,7 +306,7 @@ function boxBase:Update()
 				if line.Visible then
 					line.From = Vector2.new(aPos.X, aPos.Y)
 					line.To = Vector2.new(bPos.X, bPos.Y)
-					line.Color = Color3.fromRGB(0, 0, 0)
+					line.Color = color
 				end
 			elseif line then
 				line.Visible = false
@@ -313,6 +314,25 @@ function boxBase:Update()
 		end
 	end
 
+	if ESP.HeadCircle and self.Components.HeadCircle then
+		local head = self.Object:FindFirstChild("Head")
+		if head then
+			local headPos, onScreen = WorldToViewportPoint(cam, head.Position)
+			local distance = (cam.CFrame.p - head.Position).Magnitude
+
+			local scale = 1 / (distance * 0.1) * 100  -- Tuned scaling
+			local radius = head.Size.Y * scale -- scale based on actual head size
+
+			local circle = self.Components.HeadCircle
+			circle.Position = Vector2.new(headPos.X, headPos.Y)
+			circle.Radius = radius
+			circle.Color = color
+			circle.Visible = onScreen
+		else
+			self.Components.HeadCircle.Visible = false
+		end
+	end
+	
 	if self.Components.Highlight then
 		local highlight = self.Components.Highlight
 
@@ -430,10 +450,19 @@ function ESP:Add(obj, options)
 	for i = 1, 13 do
 		box.Components["Skeleton"][i] = Draw("Line", {
 			Color = box.Color,
-			Thickness = 3,
+			Thickness = ESP.Thickness,
 			Visible = false
 		})
 	end
+	
+	box.Components["HeadCircle"] = Draw("Circle", {
+		Radius = 10, -- Default size, gets scaled in Update
+		Thickness = ESP.Thickness,
+		Color = box.Color,
+		NumSides = 20,
+		Filled = false,
+		Visible = false
+	})
 	
 	self.Objects[obj] = box
 
