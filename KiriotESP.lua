@@ -326,7 +326,8 @@ function boxBase:Update()
 			local circle = self.Components.HeadCircle
 			circle.Position = Vector2.new(headPos.X, headPos.Y)
 			circle.Radius = radius
-			circle.Color = color
+			circle.Color = Color3.fromRGB(0, 0, 0)
+			circle.Filled = true
 			circle.Visible = onScreen
 		else
 			self.Components.HeadCircle.Visible = false
