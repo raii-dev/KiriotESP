@@ -305,7 +305,7 @@ function boxBase:Update()
 				if line.Visible then
 					line.From = Vector2.new(aPos.X, aPos.Y)
 					line.To = Vector2.new(bPos.X, bPos.Y)
-					line.Color = color
+					line.Color = Color3.fromRGB(0, 0, 0)
 				end
 			elseif line then
 				line.Visible = false
@@ -430,7 +430,7 @@ function ESP:Add(obj, options)
 	for i = 1, 13 do
 		box.Components["Skeleton"][i] = Draw("Line", {
 			Color = box.Color,
-			Thickness = ESP.Thickness,
+			Thickness = 3,
 			Visible = false
 		})
 	end
