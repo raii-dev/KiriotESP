@@ -467,7 +467,7 @@ function ESP:Add(obj, options)
 
 	box.Components["HeadCircle"] = Draw("Circle", {
 		Radius = 10,
-		Thickness = 3
+		Thickness = 3,
 		Color = box.Color,
 		NumSides = 20,
 		Filled = false,
