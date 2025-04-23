@@ -336,7 +336,7 @@ function boxBase:Update()
 			circle.Position = Vector2.new(headPos.X, headPos.Y)
 			circle.Radius = radius
 			circle.Color = Color3.fromRGB(0, 0, 0)
-			circle.Filled = true
+			circle.Filled = false
 			circle.Visible = onScreen
 		else
 			self.Components.HeadCircle.Visible = false
@@ -467,10 +467,10 @@ function ESP:Add(obj, options)
 
 	box.Components["HeadCircle"] = Draw("Circle", {
 		Radius = 10,
-		Thickness = ESP.Thickness,
+		Thickness = 3
 		Color = box.Color,
 		NumSides = 20,
-		Filled = true,
+		Filled = false,
 		Visible = false
 	})
 
