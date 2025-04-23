@@ -5,6 +5,7 @@
 local ESP = {
 	Enabled = false,
 	Boxes = true,
+	HeadCircle = true,
 	BoxShift = CFrame.new(0,-1.5,0),
 	BoxSize = Vector3.new(4,6,0),
 	Color = Color3.fromRGB(255, 170, 0),
@@ -16,6 +17,7 @@ local ESP = {
 	TeamMates = true,
 	Players = true,
 	Highlights = true, 
+	Skeletons = true,
 
 	Objects = setmetatable({}, {__mode="kv"}),
 	Overrides = {}
@@ -273,6 +275,64 @@ function boxBase:Update()
 		self.Components.Quad.Visible = false
 	end
 	
+	if ESP.Skeletons and self.Components.Skeleton then
+		local model = self.Object
+		local bones = {
+			{"Head", "UpperTorso"},
+			{"UpperTorso", "LowerTorso"},
+			{"UpperTorso", "LeftUpperArm"},
+			{"LeftUpperArm", "LeftLowerArm"},
+			{"LeftLowerArm", "LeftHand"},
+			{"UpperTorso", "RightUpperArm"},
+			{"RightUpperArm", "RightLowerArm"},
+			{"RightLowerArm", "RightHand"},
+			{"LowerTorso", "LeftUpperLeg"},
+			{"LeftUpperLeg", "LeftLowerLeg"},
+			{"LeftLowerLeg", "LeftFoot"},
+			{"LowerTorso", "RightUpperLeg"},
+			{"RightUpperLeg", "RightLowerLeg"},
+			{"RightLowerLeg", "RightFoot"},
+		}
+
+		for i, pair in ipairs(bones) do
+			local a = model:FindFirstChild(pair[1])
+			local b = model:FindFirstChild(pair[2])
+			local line = self.Components.Skeleton[i]
+
+			if a and b and line then
+				local aPos, aOnScreen = WorldToViewportPoint(cam, a.Position)
+				local bPos, bOnScreen = WorldToViewportPoint(cam, b.Position)
+				line.Visible = aOnScreen or bOnScreen
+				if line.Visible then
+					line.From = Vector2.new(aPos.X, aPos.Y)
+					line.To = Vector2.new(bPos.X, bPos.Y)
+					line.Color = color
+				end
+			elseif line then
+				line.Visible = false
+			end
+		end
+	end
+
+	if ESP.HeadCircle and self.Components.HeadCircle then
+		local head = self.Object:FindFirstChild("Head")
+		if head then
+			local headPos, onScreen = WorldToViewportPoint(cam, head.Position)
+			local distance = (cam.CFrame.p - head.Position).Magnitude
+
+			local scale = 1 / (distance * 0.1) * 100  -- Tuned scaling
+			local radius = head.Size.Y * scale -- scale based on actual head size
+
+			local circle = self.Components.HeadCircle
+			circle.Position = Vector2.new(headPos.X, headPos.Y)
+			circle.Radius = radius
+			circle.Color = color
+			circle.Visible = onScreen
+		else
+			self.Components.HeadCircle.Visible = false
+		end
+	end
+	
 	if self.Components.Highlight then
 		local highlight = self.Components.Highlight
 
@@ -384,13 +444,33 @@ function ESP:Add(obj, options)
 		Transparency = 1,
 		Visible = self.Enabled and self.Tracers
 	})
-	self.Objects[obj] = box
 	
+	box.Components["Skeleton"] = {}
+
+	for i = 1, 13 do
+		box.Components["Skeleton"][i] = Draw("Line", {
+			Color = box.Color,
+			Thickness = ESP.Thickness,
+			Visible = false
+		})
+	end
+	
+	box.Components["HeadCircle"] = Draw("Circle", {
+		Radius = 10, -- Default size, gets scaled in Update
+		Thickness = ESP.Thickness,
+		Color = box.Color,
+		NumSides = 20,
+		Filled = false,
+		Visible = false
+	})
+	
+	self.Objects[obj] = box
+
 	if options.Highlight then
 		local highlight = Instance.new("Highlight")
-		highlight.Name = "ESP_Highlight"
+		highlight.Name = "raii_highlight"
 		highlight.Adornee = obj
-		highlight.Enabled = ESP.Highlights -- global toggle
+		highlight.Enabled = true 
 		highlight.FillColor = box.Color or Color3.fromRGB(255, 0, 0)
 		highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
 		highlight.FillTransparency = 0.5
@@ -434,6 +514,7 @@ local function CharAdded(char)
 					Name = p.Name,
 					Player = p,
 					ShowHighlight = true,
+					Highlight = true,
 					PrimaryPart = c
 				})
 			end
@@ -443,6 +524,7 @@ local function CharAdded(char)
 			Name = p.Name,
 			Player = p,
 			ShowHighlight = true,
+			Highlight = true,
 			PrimaryPart = char.HumanoidRootPart
 		})
 	end
