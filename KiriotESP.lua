@@ -105,14 +105,12 @@ function ESP:AddObjectListener(parent, options)
 		if type(options.Type) == "string" and c:IsA(options.Type) or options.Type == nil then
 			if type(options.Name) == "string" and c.Name == options.Name or options.Name == nil then
 				if not options.Validator or options.Validator(c) then
-					-- Attempt to get PrimaryPart in order: "HumanoidRootPart", "Head", or any "BasePart"
 					local primaryPart = c:WaitForChild("HumanoidRootPart", 5) 
 						or c:WaitForChild("Head", 5) 
 						or c:FindFirstChildWhichIsA("BasePart") 
 						or c:IsA("Model") and c
 
 					if primaryPart then
-						-- Now that we have the primaryPart, we can add the ESP box
 						local box = ESP:Add(c, {
 							PrimaryPart = primaryPart,
 							Color = type(options.Color) == "function" and options.Color(c) or options.Color,
@@ -122,7 +120,6 @@ function ESP:AddObjectListener(parent, options)
 							RenderInNil = options.RenderInNil
 						})
 
-						-- If OnAdded callback is provided, call it
 						if options.OnAdded then
 							coroutine.wrap(options.OnAdded)(box)
 						end
@@ -134,15 +131,13 @@ function ESP:AddObjectListener(parent, options)
 		end
 	end
 
-	-- Listening for new children added
 	if options.Recursive then
 		parent.DescendantAdded:Connect(function(c)
-			coroutine.wrap(function()  -- Wrap inside a coroutine
+			coroutine.wrap(function()  
 				NewListener(c)
 			end)()
 		end)
 
-		-- Also process all current descendants in a coroutine
 		for i, v in pairs(parent:GetDescendants()) do
 			coroutine.wrap(function()
 				NewListener(v)
@@ -150,12 +145,11 @@ function ESP:AddObjectListener(parent, options)
 		end
 	else
 		parent.ChildAdded:Connect(function(c)
-			coroutine.wrap(function()  -- Wrap inside a coroutine
+			coroutine.wrap(function() 
 				NewListener(c)
 			end)()
 		end)
 
-		-- Also process all current children in a coroutine
 		for i, v in pairs(parent:GetChildren()) do
 			coroutine.wrap(function()
 				NewListener(v)
@@ -175,7 +169,6 @@ function boxBase:Remove()
 		if typeof(v) == "Instance" and v:IsA("Highlight") then
 			v:Destroy()
 		elseif typeof(v) == "table" and i == "Skeleton" then
-			-- Special handling for Skeleton which is a table of Drawing Lines
 			for _, line in ipairs(v) do
 				if line and line.Remove then
 					line.Visible = false
@@ -248,11 +241,9 @@ function boxBase:Update()
 		Torso = cf * ESP.BoxShift
 	}
 
-	local distance = (cam.CFrame.p - cf.p).magnitude  -- Calculate the distance between camera and object
+	local distance = (cam.CFrame.p - cf.p).magnitude 
 
-	-- Check if the object is within Max Distance
 	if ESP.MaxDistance and distance > ESP.MaxDistance then
-		-- If the object is beyond Max Distance, hide it
 		for i,v in pairs(self.Components) do
 			-- v.Visible = false -- (nothing yet because i need to fix for each individual component)
 		end
@@ -329,8 +320,8 @@ function boxBase:Update()
 			local headPos, onScreen = WorldToViewportPoint(cam, head.Position)
 			local distance = (cam.CFrame.p - head.Position).Magnitude
 
-			local scale = 1 / (distance * 0.2) * 100  -- Tuned scaling
-			local radius = head.Size.Y * scale -- scale based on actual head size
+			local scale = 1 / (distance * 0.2) * 100
+			local radius = head.Size.Y * scale 
 
 			local circle = self.Components.HeadCircle
 			circle.Position = Vector2.new(headPos.X, headPos.Y)
@@ -375,9 +366,7 @@ function boxBase:Update()
 		self.Components.Distance.Visible = false
 	end
 
-	-- Now handle the tracers per object:
 	if self.DisableTracers then
-		-- If the object has a flag to disable tracers, hide it
 		if self.Components.Tracer then
 			self.Components.Tracer.Visible = false
 		end
