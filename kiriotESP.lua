@@ -171,10 +171,18 @@ boxBase.__index = boxBase
 
 function boxBase:Remove()
 	ESP.Objects[self.Object] = nil
-	for i,v in pairs(self.Components) do
+	for i, v in pairs(self.Components) do
 		if typeof(v) == "Instance" and v:IsA("Highlight") then
 			v:Destroy()
-		elseif v.Remove then
+		elseif typeof(v) == "table" and i == "Skeleton" then
+			-- Special handling for Skeleton which is a table of Drawing Lines
+			for _, line in ipairs(v) do
+				if line and line.Remove then
+					line.Visible = false
+					line:Remove()
+				end
+			end
+		elseif v and v.Remove then
 			v.Visible = false
 			v:Remove()
 		end
@@ -274,7 +282,7 @@ function boxBase:Update()
 	else
 		self.Components.Quad.Visible = false
 	end
-	
+
 	if ESP.Skeletons and self.Components.Skeleton then
 		local model = self.Object
 		local bones = {
@@ -306,7 +314,8 @@ function boxBase:Update()
 				if line.Visible then
 					line.From = Vector2.new(aPos.X, aPos.Y)
 					line.To = Vector2.new(bPos.X, bPos.Y)
-					line.Color = color
+					line.Color = Color3.fromRGB(0, 0, 0)
+					line.Thickness = 3
 				end
 			elseif line then
 				line.Visible = false
@@ -320,19 +329,20 @@ function boxBase:Update()
 			local headPos, onScreen = WorldToViewportPoint(cam, head.Position)
 			local distance = (cam.CFrame.p - head.Position).Magnitude
 
-			local scale = 1 / (distance * 0.1) * 100  -- Tuned scaling
+			local scale = 1 / (distance * 0.2) * 100  -- Tuned scaling
 			local radius = head.Size.Y * scale -- scale based on actual head size
 
 			local circle = self.Components.HeadCircle
 			circle.Position = Vector2.new(headPos.X, headPos.Y)
 			circle.Radius = radius
-			circle.Color = color
+			circle.Color = Color3.fromRGB(0, 0, 0)
+			circle.Filled = false
 			circle.Visible = onScreen
 		else
 			self.Components.HeadCircle.Visible = false
 		end
 	end
-	
+
 	if self.Components.Highlight then
 		local highlight = self.Components.Highlight
 
@@ -444,7 +454,7 @@ function ESP:Add(obj, options)
 		Transparency = 1,
 		Visible = self.Enabled and self.Tracers
 	})
-	
+
 	box.Components["Skeleton"] = {}
 
 	for i = 1, 13 do
@@ -454,16 +464,16 @@ function ESP:Add(obj, options)
 			Visible = false
 		})
 	end
-	
+
 	box.Components["HeadCircle"] = Draw("Circle", {
-		Radius = 10, -- Default size, gets scaled in Update
-		Thickness = ESP.Thickness,
+		Radius = 10,
+		Thickness = 3,
 		Color = box.Color,
 		NumSides = 20,
 		Filled = false,
 		Visible = false
 	})
-	
+
 	self.Objects[obj] = box
 
 	if options.Highlight then
