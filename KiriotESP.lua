@@ -699,4 +699,4 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-ESP:Toggle(true)
+return ESP
