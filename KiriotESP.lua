@@ -266,30 +266,33 @@ function boxBase:Update()
 	end
 
 	if ESP.Boxes then
-		local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
-		local TopRight, Vis2 = WorldToViewportPoint(cam, locs.TopRight.p)
-		local BottomLeft, Vis3 = WorldToViewportPoint(cam, locs.BottomLeft.p)
-		local BottomRight, Vis4 = WorldToViewportPoint(cam, locs.BottomRight.p)
+		local humanoid = self.Object:FindFirstChildOfClass("Humanoid")
+		if humanoid then
+			local TopLeft, Vis1 = WorldToViewportPoint(cam, locs.TopLeft.p)
+			local TopRight, Vis2 = WorldToViewportPoint(cam, locs.TopRight.p)
+			local BottomLeft, Vis3 = WorldToViewportPoint(cam, locs.BottomLeft.p)
+			local BottomRight, Vis4 = WorldToViewportPoint(cam, locs.BottomRight.p)
 
-		if self.Components.Quad then
-			if Vis1 or Vis2 or Vis3 or Vis4 then
-				self.Components.QuadOutline.Visible = true
-				self.Components.QuadOutline.PointA = Vector2.new(TopRight.X, TopRight.Y)
-				self.Components.QuadOutline.PointB = Vector2.new(TopLeft.X, TopLeft.Y)
-				self.Components.QuadOutline.PointC = Vector2.new(BottomLeft.X, BottomLeft.Y)
-				self.Components.QuadOutline.PointD = Vector2.new(BottomRight.X, BottomRight.Y)
-				self.Components.QuadOutline.Color = Color3.fromRGB(0, 0, 0)  
-				self.Components.QuadOutline.Thickness = 4 
-				
-				self.Components.Quad.Visible = true
-				self.Components.Quad.PointA = Vector2.new(TopRight.X, TopRight.Y)
-				self.Components.Quad.PointB = Vector2.new(TopLeft.X, TopLeft.Y)
-				self.Components.Quad.PointC = Vector2.new(BottomLeft.X, BottomLeft.Y)
-				self.Components.Quad.PointD = Vector2.new(BottomRight.X, BottomRight.Y)
-				self.Components.Quad.Color = color  
-			else
-				self.Components.QuadOutline.Visible = false
-				self.Components.Quad.Visible = false
+			if self.Components.Quad then
+				if Vis1 or Vis2 or Vis3 or Vis4 then
+					self.Components.QuadOutline.Visible = true
+					self.Components.QuadOutline.PointA = Vector2.new(TopRight.X, TopRight.Y)
+					self.Components.QuadOutline.PointB = Vector2.new(TopLeft.X, TopLeft.Y)
+					self.Components.QuadOutline.PointC = Vector2.new(BottomLeft.X, BottomLeft.Y)
+					self.Components.QuadOutline.PointD = Vector2.new(BottomRight.X, BottomRight.Y)
+					self.Components.QuadOutline.Color = Color3.fromRGB(0, 0, 0)  
+					self.Components.QuadOutline.Thickness = 4 
+					
+					self.Components.Quad.Visible = true
+					self.Components.Quad.PointA = Vector2.new(TopRight.X, TopRight.Y)
+					self.Components.Quad.PointB = Vector2.new(TopLeft.X, TopLeft.Y)
+					self.Components.Quad.PointC = Vector2.new(BottomLeft.X, BottomLeft.Y)
+					self.Components.Quad.PointD = Vector2.new(BottomRight.X, BottomRight.Y)
+					self.Components.Quad.Color = color  
+				else
+					self.Components.QuadOutline.Visible = false
+					self.Components.Quad.Visible = false
+				end
 			end
 		end
 	end
@@ -696,4 +699,4 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-return ESP
+ESP:Toggle(true)
